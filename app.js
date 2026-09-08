@@ -29,6 +29,7 @@ function generateId() {
 
 // --- Calcolo stato ---
 function getDaysLeft(dueDate) {
+    if (!dueDate) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
@@ -38,6 +39,7 @@ function getDaysLeft(dueDate) {
 function getStatusClass(reminder) {
     if (reminder.checked) return 'checked';
     const days = getDaysLeft(reminder.dueDate);
+    if (days === null) return 'no-date';
     if (days < 0) return 'overdue';
     if (days === 0) return 'today';
     if (days <= 3) return 'urgent';
@@ -48,10 +50,11 @@ function getStatusClass(reminder) {
 function getStatusLabel(reminder) {
     if (reminder.checked) return '✓ Controllato';
     const days = getDaysLeft(reminder.dueDate);
-    if (days < 0) return `Scaduto da ${-days}g`;
+    if (days === null) return 'Nessuna data';
+    if (days < 0) return 'Scaduto da ' + (-days) + 'g';
     if (days === 0) return 'Oggi!';
     if (days === 1) return 'Domani';
-    return `Tra ${days} giorni`;
+    return 'Tra ' + days + ' giorni';
 }
 
 // --- Rendering ---
@@ -141,12 +144,9 @@ function renderReminders() {
 function updateStats(reminders) {
     const active = reminders.filter(r => !r.checked);
     document.getElementById('statTotal').textContent = reminders.length;
-    document.getElementById('statOverdue').textContent = active.filter(r => getDaysLeft(r.dueDate) < 0).length;
+    document.getElementById('statOverdue').textContent = active.filter(r => { const d = getDaysLeft(r.dueDate); return d !== null && d < 0; }).length;
     document.getElementById('statToday').textContent = active.filter(r => getDaysLeft(r.dueDate) === 0).length;
-    document.getElementById('statWeek').textContent = active.filter(r => {
-        const days = getDaysLeft(r.dueDate);
-        return days > 0 && days <= 7;
-    }).length;
+    document.getElementById('statWeek').textContent = active.filter(r => { const d = getDaysLeft(r.dueDate); return d !== null && d > 0 && d <= 7; }).length;
 }
 
 // --- Azioni ---
@@ -217,8 +217,8 @@ function handleFormSubmit(e) {
     const priority = document.getElementById('priorityInput').value;
     const dueDate = document.getElementById('dateInput').value;
 
-    if (!title || !dueDate) {
-        showAlert('Titolo e data sono obbligatori', 'danger');
+    if (!title && !dueDate) {
+        showAlert('Inserisci almeno un titolo o una data', 'danger');
         return;
     }
 

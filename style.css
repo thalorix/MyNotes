@@ -64,3 +64,4 @@ body {
 .modal-header.bg-primary {
     background: var(--gradient-primary) !important;
 }
+.reminder-card.status-no-date { border-left-color: #6c757d; }
