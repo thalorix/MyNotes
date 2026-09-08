@@ -45,6 +45,7 @@ body {
 .reminder-card.status-soon { border-left-color: #0dcaf0; }
 .reminder-card.status-ok { border-left-color: #198754; }
 .reminder-card.status-checked { border-left-color: #6c757d; opacity: 0.7; }
+.reminder-card.status-no-date { border-left-color: #6c757d; }
 
 .status-badge {
     font-size: 0.75rem;
@@ -53,15 +54,21 @@ body {
     font-weight: 600;
 }
 
-.card-footer form {
-    display: contents;
+.modal-header.bg-primary {
+    background: var(--gradient-primary) !important;
 }
 
 [data-bs-theme="dark"] .reminder-card.status-checked {
     opacity: 0.5;
 }
 
-.modal-header.bg-primary {
-    background: var(--gradient-primary) !important;
+/* Badge tag personalizzati */
+.badge.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white;
 }
-.reminder-card.status-no-date { border-left-color: #6c757d; }
+
+.badge.bg-pink {
+    background-color: #d63384 !important;
+    color: white;
+}
