@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="it" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReminderHub - MyNotes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-bell-fill me-2"></i>ReminderHub</a>
+            <div class="d-flex align-items-center">
+                <button id="themeToggle" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-moon-stars-fill"></i></button>
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#reminderModal">
+                    <i class="bi bi-plus-lg me-1"></i>Nuovo
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <div id="alertContainer"></div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card stat-card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small">Totali</div>
+                        <div class="h3 mb-0 fw-bold" id="statTotal">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card border-0 shadow-sm stat-overdue">
+                    <div class="card-body">
+                        <div class="text-muted small">Scaduti</div>
+                        <div class="h3 mb-0 fw-bold text-danger" id="statOverdue">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card border-0 shadow-sm stat-today">
+                    <div class="card-body">
+                        <div class="text-muted small">Oggi</div>
+                        <div class="h3 mb-0 fw-bold text-warning" id="statToday">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card border-0 shadow-sm stat-week">
+                    <div class="card-body">
+                        <div class="text-muted small">Prossimi 7gg</div>
+                        <div class="h3 mb-0 fw-bold text-info" id="statWeek">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Cerca</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Titolo o descrizione...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Categoria</label>
+                        <select id="categoryFilter" class="form-select">
+                            <option value="tutte">Tutte</option>
+                            <option value="Università">Università</option>
+                            <option value="Biblioteca">Biblioteca</option>
+                            <option value="Lezioni">Lezioni</option>
+                            <option value="Personale">Personale</option>
+                            <option value="Lavoro">Lavoro</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Stato</label>
+                        <select id="statusFilter" class="form-select">
+                            <option value="tutti">Tutti</option>
+                            <option value="attivi">Attivi</option>
+                            <option value="controllati">Controllati</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="clearFilters" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="remindersList" class="row g-3"></div>
+    </main>
+
+    <footer class="text-center text-muted py-3 mt-5 border-top">
+        <small>ReminderHub by Matteo · Le tue informazioni, sempre sotto controllo</small>
+    </footer>
+
+    <!-- Modal per aggiungere/modificare -->
+    <div class="modal fade" id="reminderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i><span id="modalTitle">Nuovo promemoria</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="reminderForm">
+                        <input type="hidden" id="reminderId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Titolo</label>
+                            <input type="text" id="titleInput" class="form-control form-control-lg" placeholder="Es. Pagare prima rata università">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Descrizione</label>
+                            <textarea id="descriptionInput" class="form-control" rows="3" placeholder="Dettagli, note, importi..."></textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Categoria</label>
+                                <select id="categoryInput" class="form-select">
+                                    <option value="Università">Università</option>
+                                    <option value="Biblioteca">Biblioteca</option>
+                                    <option value="Lezioni">Lezioni</option>
+                                    <option value="Personale">Personale</option>
+                                    <option value="Lavoro">Lavoro</option>
+                                    <option value="Altro">Altro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Priorità</label>
+                                <select id="priorityInput" class="form-select">
+                                    <option value="bassa">Bassa</option>
+                                    <option value="media" selected>Media</option>
+                                    <option value="alta">Alta</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label class="form-label fw-semibold">Data scadenza</label>
+                            <input type="date" id="dateInput" class="form-control"   >
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-check2-circle me-1"></i>Salva</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
