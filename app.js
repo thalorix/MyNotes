@@ -187,14 +187,16 @@ function renderTags() {
 function addTag() {
     const input = document.getElementById('newTagInput');
     const name = input.value.trim();
-    if (!name) return;
+    if (!name) return alert('Inserisci un nome per il tag');
     const tags = getTags();
     if (tags.find(t => t.name === name)) return alert('Esiste già');
-    const colors = ['primary','success','info','warning','danger','purple','pink'];
-    tags.push({name, color: colors[Math.floor(Math.random() * colors.length)]});
+    const color = document.getElementById('selectedTagColor').value || 'primary';
+    tags.push({name, color});
     saveTags(tags);
     input.value = '';
+    document.getElementById('selectedTagColor').value = 'primary';
     renderTags();
+    showAlert('Tag aggiunto!', 'success');
 }
 
 function deleteTag(name) {
@@ -266,6 +268,8 @@ function editReminder(id) {
     document.getElementById('categoryInput').value = r.category || 'Altro';
     document.getElementById('priorityInput').value = r.priority || 'media';
     document.getElementById('dateInput').value = r.dueDate || '';
+    document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
+    document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
     document.getElementById('modalTitle').textContent = 'Modifica promemoria';
     renderTagsSelector();
     new bootstrap.Modal(document.getElementById('reminderModal')).show();
@@ -288,6 +292,7 @@ function setupEventListeners() {
     document.getElementById('reminderModal').addEventListener('hidden.bs.modal', () => {
         const form = document.getElementById('reminderForm');
         form.reset();
+        document.getElementById('autoDeleteInput').value = '';
         form.dataset.selectedTags = '[]';
         document.getElementById('reminderId').value = '';
         document.getElementById('modalTitle').textContent = 'Nuovo promemoria';
@@ -304,6 +309,7 @@ function handleFormSubmit(e) {
     const category = document.getElementById('categoryInput').value;
     const priority = document.getElementById('priorityInput').value;
     const dueDate = document.getElementById('dateInput').value;
+    const autoDeleteDate = document.getElementById('autoDeleteInput').value;
     const tags = JSON.parse(document.getElementById('reminderForm').dataset.selectedTags || '[]');
 
     if (!title && !dueDate) return alert('Inserisci almeno un titolo o una data');
@@ -352,4 +358,27 @@ function getBadgeColor(statusClass) {
 
 function getTextColor(statusClass) {
     return (statusClass === 'today' || statusClass === 'soon') ? 'dark' : 'white';
+}
+
+// Funzione per eliminare automaticamente le attività scadute
+function autoDeleteExpiredReminders() {
+    const reminders = getReminders();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const filtered = reminders.filter(r => {
+        if (!r.autoDeleteDate) return true; // Mantieni se non ha data di eliminazione
+        const deleteDate = new Date(r.autoDeleteDate);
+        return deleteDate > today; // Mantieni solo se la data di eliminazione è futura
+    });
+    
+    if (filtered.length !== reminders.length) {
+        saveReminders(filtered);
+        console.log(`Eliminate automaticamente ${reminders.length - filtered.length} attività scadute`);
+    }
+}
+
+// Esegui l'eliminazione automatica all'avvio
+if (typeof autoDeleteExpiredReminders === 'function') {
+    autoDeleteExpiredReminders();
 }
