@@ -60,7 +60,7 @@ function renderReminders() {
         const matchSearch = !search || (r.title && r.title.toLowerCase().includes(search)) || (r.description && r.description.toLowerCase().includes(search));
         const matchCategory = category === 'tutte' || r.category === category;
         const matchTag = tag === 'tutti' || (r.tags && r.tags.includes(tag));
-        const matchStatus = status === 'tutti' || (status === 'attivi' && !r.checked) || (status === 'controllati' && r.checked);
+        const matchStatus = status === 'tutti' || (status === 'attivi' && !r.checked) || (status === 'completati' && r.checked);
         return matchSearch && matchCategory && matchTag && matchStatus;
     });
 
@@ -70,7 +70,6 @@ function renderReminders() {
         return new Date(a.dueDate) - new Date(b.dueDate);
     });
 
-    updateStats(reminders);
     updateCategoryFilter();
     updateTagFilter();
 
@@ -115,13 +114,6 @@ function renderReminders() {
     }).join('');
 }
 
-function updateStats(reminders) {
-    const active = reminders.filter(r => !r.checked);
-    document.getElementById('statTotal').textContent = reminders.length;
-    document.getElementById('statOverdue').textContent = active.filter(r => { const d = getDaysLeft(r.dueDate); return d !== null && d < 0; }).length;
-    document.getElementById('statToday').textContent = active.filter(r => getDaysLeft(r.dueDate) === 0).length;
-    document.getElementById('statWeek').textContent = active.filter(r => { const d = getDaysLeft(r.dueDate); return d !== null && d > 0 && d <= 7; }).length;
-}
 
 function updateCategoryFilter() {
     const select = document.getElementById('categoryFilter');
