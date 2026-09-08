@@ -101,6 +101,13 @@
                         <div class="mb-3 mt-3"><label class="form-label fw-semibold">Data scadenza</label><input type="date" id="dateInput" class="form-control"></div>
                         <div class="mb-3"><label class="form-label fw-semibold">Elimina automaticamente dopo il <span class="text-muted small">(opzionale)</span></label><input type="date" id="autoDeleteInput" class="form-control"><div class="form-text">L'attività verrà eliminata automaticamente dopo questa data</div></div>
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Stato iniziale</label>
+                            <select id="initialStatusInput" class="form-select">
+                                <option value="attivo" selected>Attivo (da fare)</option>
+                                <option value="completato">Completato</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Tag</label>
                             <div id="tagsSelector" class="d-flex flex-wrap gap-2 p-2 border rounded"><span class="text-muted small">Nessun tag disponibile.</span></div>
                             <div class="form-text">Clicca sui tag per selezionarli</div>

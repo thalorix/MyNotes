@@ -262,7 +262,9 @@ function editReminder(id) {
     document.getElementById('priorityInput').value = r.priority || 'media';
     document.getElementById('dateInput').value = r.dueDate || '';
     document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
+    document.getElementById('initialStatusInput').value = r.checked ? 'completato' : 'attivo';
     document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
+    document.getElementById('initialStatusInput').value = r.checked ? 'completato' : 'attivo';
     document.getElementById('modalTitle').textContent = 'Modifica promemoria';
     renderTagsSelector();
     new bootstrap.Modal(document.getElementById('reminderModal')).show();
@@ -288,6 +290,7 @@ function setupEventListeners() {
         const form = document.getElementById('reminderForm');
         form.reset();
         document.getElementById('autoDeleteInput').value = '';
+        document.getElementById('initialStatusInput').value = 'attivo';
         form.dataset.selectedTags = '[]';
         document.getElementById('reminderId').value = '';
         document.getElementById('modalTitle').textContent = 'Nuovo promemoria';
@@ -306,6 +309,7 @@ function handleFormSubmit(e) {
     const dueDate = document.getElementById('dateInput').value;
     const autoDeleteDate = document.getElementById('autoDeleteInput').value;
     const tags = JSON.parse(document.getElementById('reminderForm').dataset.selectedTags || '[]');
+    const initialStatus = document.getElementById('initialStatusInput').value;
 
     if (!title && !dueDate) return alert('Inserisci almeno un titolo o una data');
 
@@ -314,7 +318,7 @@ function handleFormSubmit(e) {
         const r = reminders.find(x => x.id === id);
         if (r) Object.assign(r, {title, description, category, priority, dueDate, tags});
     } else {
-        reminders.push({id: generateId(), title, description, category, priority, dueDate, tags, checked: false, createdAt: new Date().toISOString()});
+        reminders.push({id: generateId(), title, description, category, priority, dueDate, tags, checked: initialStatus === 'completato', createdAt: new Date().toISOString()});
     }
     saveReminders(reminders);
     renderReminders();
