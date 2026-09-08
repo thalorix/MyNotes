@@ -174,6 +174,7 @@ function renderTags() {
     const list = document.getElementById('tagsList');
     list.innerHTML = tags.map(t => `<span class="badge bg-${t.color} p-2 d-flex align-items-center gap-2">${t.name}<button class="btn btn-sm btn-link text-white p-0" onclick="deleteTag('${t.name}')"><i class="bi bi-x-lg"></i></button></span>`).join('');
     renderTagsSelector();
+    renderCategoriesDisplay();
     renderQuickTags();
 }
 
@@ -208,6 +209,14 @@ function renderTagsSelector() {
     const form = document.getElementById('reminderForm');
     const selected = JSON.parse(form.dataset.selectedTags || '[]');
     container.innerHTML = tags.map(t => `<span class="badge bg-${t.color} p-2 ${selected.includes(t.name)?'border border-3 border-dark':''}" style="cursor:pointer;opacity:${selected.includes(t.name)?'1':'0.6'}" onclick="toggleTagSelector('${t.name}')">${t.name}</span>`).join('');
+}
+
+function renderCategoriesDisplay() {
+    const categories = getCategories();
+    const container = document.getElementById('categoriesDisplay');
+    if (container) {
+        container.innerHTML = categories.length ? categories.map(c => `<span class="badge bg-secondary p-2"><i class="bi bi-folder-fill me-1"></i>${c}</span>`).join('') : '<span class="text-muted small">Nessuna categoria.</span>';
+    }
 }
 
 function renderQuickTags() {

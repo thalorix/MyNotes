@@ -24,7 +24,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small text-muted">Cerca</label>
                         <div class="input-group">
                             <input type="text" id="searchInput" class="form-control" placeholder="Titolo o descrizione...">
@@ -60,8 +60,8 @@
                             <option value="completati">Completati</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button id="clearFilters" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i> Reset</button>
+                    <div class="col-md-1">
+                        <button id="clearFilters" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i></button>
                     </div>
                 </div>
             </div>
@@ -72,6 +72,13 @@
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#tagsModal"><i class="bi bi-gear-fill"></i> Gestisci</button>
             </div>
             <div class="card-body"><div id="quickTags" class="d-flex flex-wrap gap-2"><span class="text-muted small">Nessun tag.</span></div></div>
+        </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-folder-fill me-2"></i>Le tue categorie</span>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#categoryModal"><i class="bi bi-gear-fill"></i> Gestisci</button>
+            </div>
+            <div class="card-body"><div id="categoriesDisplay" class="d-flex flex-wrap gap-2"><span class="text-muted small">Nessuna categoria.</span></div></div>
         </div>
         <div id="remindersList" class="row g-3"></div>
     </main>
