@@ -287,9 +287,13 @@ function toggleReminder(id) {
 }
 
 function deleteReminder(id) {
-    if (!confirm('Eliminare?')) return;
-    saveReminders(getReminders().filter(r => r.id !== id));
+    console.log('️ Elimino ID:', id);
+    const before = getReminders().length;
+    const after = getReminders().filter(r => r.id !== id);
+    console.log('Prima:', before, 'Dopo:', after.length);
+    saveReminders(after);
     renderReminders();
+    showAlert('Attività eliminata', 'success');
 }
 
 function editReminder(id) {
@@ -410,4 +414,15 @@ function getBadgeColor(statusClass) {
 
 function getTextColor(statusClass) {
     return (statusClass === 'today' || statusClass === 'soon') ? 'dark' : 'white';
+}
+
+
+function showAlert(message, type = 'info') {
+    const container = document.getElementById('alertContainer');
+    if (!container) return;
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    container.appendChild(alert);
+    setTimeout(() => alert.remove(), 2000);
 }
