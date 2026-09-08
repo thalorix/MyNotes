@@ -62,7 +62,6 @@ body {
     opacity: 0.5;
 }
 
-/* Badge tag personalizzati */
 .badge.bg-purple {
     background-color: #6f42c1 !important;
     color: white;
