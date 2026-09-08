@@ -1,0 +1,66 @@
+:root {
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+body {
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    transition: background 0.3s;
+}
+
+[data-bs-theme="dark"] body {
+    background: linear-gradient(180deg, #1a1d23 0%, #0d1117 100%);
+}
+
+.navbar {
+    background: var(--gradient-primary) !important;
+}
+
+.stat-card {
+    transition: transform 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-overdue { border-left-color: #dc3545; }
+.stat-today { border-left-color: #ffc107; }
+.stat-week { border-left-color: #0dcaf0; }
+
+.reminder-card {
+    transition: all 0.25s ease;
+    border-left: 5px solid #dee2e6;
+}
+
+.reminder-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1) !important;
+}
+
+.reminder-card.status-overdue { border-left-color: #dc3545; }
+.reminder-card.status-today { border-left-color: #ffc107; }
+.reminder-card.status-urgent { border-left-color: #fd7e14; }
+.reminder-card.status-soon { border-left-color: #0dcaf0; }
+.reminder-card.status-ok { border-left-color: #198754; }
+.reminder-card.status-checked { border-left-color: #6c757d; opacity: 0.7; }
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 1rem;
+    font-weight: 600;
+}
+
+.card-footer form {
+    display: contents;
+}
+
+[data-bs-theme="dark"] .reminder-card.status-checked {
+    opacity: 0.5;
+}
+
+.modal-header.bg-primary {
+    background: var(--gradient-primary) !important;
+}
