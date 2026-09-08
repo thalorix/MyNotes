@@ -6,14 +6,29 @@ const DEFAULT_CATEGORIES = ['Università', 'Biblioteca', 'Lezioni', 'Personale',
 const DEFAULT_TAGS = [{name: 'Urgente', color: 'danger'}, {name: 'Università', color: 'primary'}];
 
 document.addEventListener('DOMContentLoaded', () => {
-    initData(); initTheme(); renderReminders(); renderCategories(); renderTags(); setupEventListeners();
+    console.log('🚀 App avviata');
+    initData();
+    initTheme();
+    populateAllFilters();
+    renderAll();
+    setupEventListeners();
+    autoDeleteExpiredReminders();
 });
 
 function initData() {
-    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-    if (!localStorage.getItem(CATEGORIES_KEY)) localStorage.setItem(CATEGORIES_KEY, JSON.stringify(DEFAULT_CATEGORIES));
-    if (!localStorage.getItem(TAGS_KEY)) localStorage.setItem(TAGS_KEY, JSON.stringify(DEFAULT_TAGS));
+    if (!localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(CATEGORIES_KEY)) {
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(DEFAULT_CATEGORIES));
+        console.log('✅ Categorie default inizializzate:', DEFAULT_CATEGORIES);
+    }
+    if (!localStorage.getItem(TAGS_KEY)) {
+        localStorage.setItem(TAGS_KEY, JSON.stringify(DEFAULT_TAGS));
+        console.log('✅ Tag default inizializzati:', DEFAULT_TAGS);
+    }
 }
+
 function getReminders() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
 function saveReminders(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
 function getCategories() { return JSON.parse(localStorage.getItem(CATEGORIES_KEY) || JSON.stringify(DEFAULT_CATEGORIES)); }
@@ -21,6 +36,42 @@ function saveCategories(c) { localStorage.setItem(CATEGORIES_KEY, JSON.stringify
 function getTags() { return JSON.parse(localStorage.getItem(TAGS_KEY) || JSON.stringify(DEFAULT_TAGS)); }
 function saveTags(t) { localStorage.setItem(TAGS_KEY, JSON.stringify(t)); }
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+
+function populateAllFilters() {
+    console.log('🔄 Popolo i filtri...');
+    const categories = getCategories();
+    const tags = getTags();
+    console.log('📁 Categorie:', categories);
+    console.log('��️ Tag:', tags);
+
+    // Popola filtro categoria
+    const catFilter = document.getElementById('categoryFilter');
+    if (catFilter) {
+        catFilter.innerHTML = '<option value="tutte">Tutte</option>' + 
+            categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    // Popola filtro tag
+    const tagFilter = document.getElementById('tagFilter');
+    if (tagFilter) {
+        tagFilter.innerHTML = '<option value="tutti">Tutti</option>' + 
+            tags.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+    }
+
+    // Popola select categoria nel form
+    const catInput = document.getElementById('categoryInput');
+    if (catInput) {
+        catInput.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+}
+
+function renderAll() {
+    renderCategories();
+    renderTags();
+    renderCategoriesDisplay();
+    renderQuickTags();
+    renderReminders();
+}
 
 function getDaysLeft(dueDate) {
     if (!dueDate) return null;
@@ -54,15 +105,16 @@ function renderReminders() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const category = document.getElementById('categoryFilter').value;
     const tag = document.getElementById('tagFilter').value;
-    const status = document.getElementById('statusFilter').value;
     const priority = document.getElementById('priorityFilter').value;
+    const status = document.getElementById('statusFilter').value;
 
     let filtered = reminders.filter(r => {
         const matchSearch = !search || (r.title && r.title.toLowerCase().includes(search)) || (r.description && r.description.toLowerCase().includes(search));
         const matchCategory = category === 'tutte' || r.category === category;
         const matchTag = tag === 'tutti' || (r.tags && r.tags.includes(tag));
+        const matchPriority = priority === 'tutte' || r.priority === priority;
         const matchStatus = status === 'tutti' || (status === 'attivi' && !r.checked) || (status === 'completati' && r.checked);
-        return matchSearch && matchCategory && matchTag && matchStatus && matchPriority;
+        return matchSearch && matchCategory && matchTag && matchPriority && matchStatus;
     });
 
     filtered.sort((a, b) => {
@@ -70,9 +122,6 @@ function renderReminders() {
         if (!b.dueDate) return -1;
         return new Date(a.dueDate) - new Date(b.dueDate);
     });
-
-    updateCategoryFilter();
-    updateTagFilter();
 
     const list = document.getElementById('remindersList');
     if (filtered.length === 0) {
@@ -115,34 +164,23 @@ function renderReminders() {
     }).join('');
 }
 
-
-function updateCategoryFilter() {
-    const select = document.getElementById('categoryFilter');
-    const current = select.value;
-    select.innerHTML = '<option value="tutte">Tutte</option>' + getCategories().map(c => `<option value="${c}">${c}</option>`).join('');
-    select.value = current;
-}
-
-function updateTagFilter() {
-    const select = document.getElementById('tagFilter');
-    const current = select.value;
-    select.innerHTML = '<option value="tutti">Tutti</option>' + getTags().map(t => `<option value="${t.name}">${t.name}</option>`).join('');
-    select.value = current;
-}
-
 function renderCategories() {
     const list = document.getElementById('categoriesList');
-    const select = document.getElementById('categoryInput');
-    list.innerHTML = getCategories().map(c => `
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            ${c}
-            ${c !== 'Altro' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${c}')"><i class="bi bi-trash"></i></button>` : '<span class="text-muted small">Default</span>'}
-        </div>
-    `).join('');
-    if (select) {
-        const current = select.value;
-        select.innerHTML = getCategories().map(c => `<option value="${c}">${c}</option>`).join('');
-        if (current) select.value = current;
+    if (list) {
+        list.innerHTML = getCategories().map(c => `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                ${c}
+                ${c !== 'Altro' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${c}')"><i class="bi bi-trash"></i></button>` : '<span class="text-muted small">Default</span>'}
+            </div>
+        `).join('');
+    }
+}
+
+function renderCategoriesDisplay() {
+    const container = document.getElementById('categoriesDisplay');
+    if (container) {
+        const categories = getCategories();
+        container.innerHTML = categories.length ? categories.map(c => `<span class="badge bg-secondary p-2"><i class="bi bi-folder-fill me-1"></i>${c}</span>`).join('') : '<span class="text-muted small">Nessuna categoria.</span>';
     }
 }
 
@@ -155,7 +193,8 @@ function addCategory() {
     categories.push(name);
     saveCategories(categories);
     input.value = '';
-    renderCategories();
+    populateAllFilters();
+    renderAll();
 }
 
 function deleteCategory(name) {
@@ -165,32 +204,38 @@ function deleteCategory(name) {
     const reminders = getReminders();
     reminders.forEach(r => { if (r.category === name) r.category = 'Altro'; });
     saveReminders(reminders);
-    renderCategories();
-    renderReminders();
+    populateAllFilters();
+    renderAll();
 }
 
 function renderTags() {
-    const tags = getTags();
     const list = document.getElementById('tagsList');
-    list.innerHTML = tags.map(t => `<span class="badge bg-${t.color} p-2 d-flex align-items-center gap-2">${t.name}<button class="btn btn-sm btn-link text-white p-0" onclick="deleteTag('${t.name}')"><i class="bi bi-x-lg"></i></button></span>`).join('');
+    if (list) {
+        list.innerHTML = getTags().map(t => `<span class="badge bg-${t.color} p-2 d-flex align-items-center gap-2">${t.name}<button class="btn btn-sm btn-link text-white p-0" onclick="deleteTag('${t.name}')"><i class="bi bi-x-lg"></i></button></span>`).join('');
+    }
     renderTagsSelector();
-    renderCategoriesDisplay();
-    renderQuickTags();
+}
+
+function renderQuickTags() {
+    const container = document.getElementById('quickTags');
+    if (container) {
+        const tags = getTags();
+        container.innerHTML = tags.length ? tags.map(t => `<span class="badge bg-${t.color} p-2" style="cursor:pointer" onclick="filterByTag('${t.name}')"><i class="bi bi-tag-fill me-1"></i>${t.name}</span>`).join('') : '<span class="text-muted small">Nessun tag.</span>';
+    }
 }
 
 function addTag() {
     const input = document.getElementById('newTagInput');
     const name = input.value.trim();
-    if (!name) return alert('Inserisci un nome per il tag');
+    if (!name) return;
     const tags = getTags();
     if (tags.find(t => t.name === name)) return alert('Esiste già');
-    const color = document.getElementById('selectedTagColor').value || 'primary';
-    tags.push({name, color});
+    const colors = ['primary','success','info','warning','danger','purple','pink'];
+    tags.push({name, color: colors[Math.floor(Math.random() * colors.length)]});
     saveTags(tags);
     input.value = '';
-    document.getElementById('selectedTagColor').value = 'primary';
-    renderTags();
-    showAlert('Tag aggiunto!', 'success');
+    populateAllFilters();
+    renderAll();
 }
 
 function deleteTag(name) {
@@ -199,30 +244,18 @@ function deleteTag(name) {
     const reminders = getReminders();
     reminders.forEach(r => { if (r.tags) r.tags = r.tags.filter(t => t !== name); });
     saveReminders(reminders);
-    renderTags();
-    renderReminders();
+    populateAllFilters();
+    renderAll();
 }
 
 function renderTagsSelector() {
-    const tags = getTags();
     const container = document.getElementById('tagsSelector');
     const form = document.getElementById('reminderForm');
-    const selected = JSON.parse(form.dataset.selectedTags || '[]');
-    container.innerHTML = tags.map(t => `<span class="badge bg-${t.color} p-2 ${selected.includes(t.name)?'border border-3 border-dark':''}" style="cursor:pointer;opacity:${selected.includes(t.name)?'1':'0.6'}" onclick="toggleTagSelector('${t.name}')">${t.name}</span>`).join('');
-}
-
-function renderCategoriesDisplay() {
-    const categories = getCategories();
-    const container = document.getElementById('categoriesDisplay');
-    if (container) {
-        container.innerHTML = categories.length ? categories.map(c => `<span class="badge bg-secondary p-2"><i class="bi bi-folder-fill me-1"></i>${c}</span>`).join('') : '<span class="text-muted small">Nessuna categoria.</span>';
+    if (container && form) {
+        const tags = getTags();
+        const selected = JSON.parse(form.dataset.selectedTags || '[]');
+        container.innerHTML = tags.length ? tags.map(t => `<span class="badge bg-${t.color} p-2 ${selected.includes(t.name)?'border border-3 border-dark':''}" style="cursor:pointer;opacity:${selected.includes(t.name)?'1':'0.6'}" onclick="toggleTagSelector('${t.name}')">${t.name}</span>`).join('') : '<span class="text-muted small">Nessun tag disponibile.</span>';
     }
-}
-
-function renderQuickTags() {
-    const tags = getTags();
-    const container = document.getElementById('quickTags');
-    container.innerHTML = tags.length ? tags.map(t => `<span class="badge bg-${t.color} p-2" style="cursor:pointer" onclick="filterByTag('${t.name}')"><i class="bi bi-tag-fill me-1"></i>${t.name}</span>`).join('') : '<span class="text-muted small">Nessun tag.</span>';
 }
 
 function toggleTagSelector(name) {
@@ -272,8 +305,6 @@ function editReminder(id) {
     document.getElementById('dateInput').value = r.dueDate || '';
     document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
     document.getElementById('initialStatusInput').value = r.checked ? 'completato' : 'attivo';
-    document.getElementById('autoDeleteInput').value = r.autoDeleteDate || '';
-    document.getElementById('initialStatusInput').value = r.checked ? 'completato' : 'attivo';
     document.getElementById('modalTitle').textContent = 'Modifica promemoria';
     renderTagsSelector();
     new bootstrap.Modal(document.getElementById('reminderModal')).show();
@@ -284,25 +315,24 @@ function setupEventListeners() {
     document.getElementById('searchInput').addEventListener('input', renderReminders);
     document.getElementById('categoryFilter').addEventListener('change', renderReminders);
     document.getElementById('tagFilter').addEventListener('change', renderReminders);
-    document.getElementById('statusFilter').addEventListener('change', renderReminders);
     document.getElementById('priorityFilter').addEventListener('change', renderReminders);
+    document.getElementById('statusFilter').addEventListener('change', renderReminders);
     document.getElementById('clearFilters').addEventListener('click', () => {
         document.getElementById('searchInput').value = '';
         document.getElementById('categoryFilter').value = 'tutte';
         document.getElementById('tagFilter').value = 'tutti';
-        document.getElementById('statusFilter').value = 'tutti';
         document.getElementById('priorityFilter').value = 'tutte';
+        document.getElementById('statusFilter').value = 'tutti';
         renderReminders();
     });
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('reminderModal').addEventListener('hidden.bs.modal', () => {
         const form = document.getElementById('reminderForm');
         form.reset();
-        document.getElementById('autoDeleteInput').value = '';
-        document.getElementById('initialStatusInput').value = 'attivo';
         form.dataset.selectedTags = '[]';
         document.getElementById('reminderId').value = '';
         document.getElementById('modalTitle').textContent = 'Nuovo promemoria';
+        document.getElementById('initialStatusInput').value = 'attivo';
     });
     document.getElementById('newCategoryInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addCategory(); });
     document.getElementById('newTagInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTag(); });
@@ -317,17 +347,17 @@ function handleFormSubmit(e) {
     const priority = document.getElementById('priorityInput').value;
     const dueDate = document.getElementById('dateInput').value;
     const autoDeleteDate = document.getElementById('autoDeleteInput').value;
-    const tags = JSON.parse(document.getElementById('reminderForm').dataset.selectedTags || '[]');
     const initialStatus = document.getElementById('initialStatusInput').value;
+    const tags = JSON.parse(document.getElementById('reminderForm').dataset.selectedTags || '[]');
 
     if (!title && !dueDate) return alert('Inserisci almeno un titolo o una data');
 
     const reminders = getReminders();
     if (id) {
         const r = reminders.find(x => x.id === id);
-        if (r) Object.assign(r, {title, description, category, priority, dueDate, tags});
+        if (r) Object.assign(r, {title, description, category, priority, dueDate, autoDeleteDate, tags});
     } else {
-        reminders.push({id: generateId(), title, description, category, priority, dueDate, tags, checked: initialStatus === 'completato', createdAt: new Date().toISOString()});
+        reminders.push({id: generateId(), title, description, category, priority, dueDate, autoDeleteDate, tags, checked: initialStatus === 'completato', createdAt: new Date().toISOString()});
     }
     saveReminders(reminders);
     renderReminders();
@@ -348,6 +378,20 @@ function toggleTheme() {
     document.getElementById('themeToggle').innerHTML = next === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
 }
 
+function autoDeleteExpiredReminders() {
+    const reminders = getReminders();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const filtered = reminders.filter(r => {
+        if (!r.autoDeleteDate) return true;
+        const deleteDate = new Date(r.autoDeleteDate);
+        return deleteDate > today;
+    });
+    if (filtered.length !== reminders.length) {
+        saveReminders(filtered);
+    }
+}
+
 function formatDate(dateStr) {
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
@@ -366,27 +410,4 @@ function getBadgeColor(statusClass) {
 
 function getTextColor(statusClass) {
     return (statusClass === 'today' || statusClass === 'soon') ? 'dark' : 'white';
-}
-
-// Funzione per eliminare automaticamente le attività scadute
-function autoDeleteExpiredReminders() {
-    const reminders = getReminders();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const filtered = reminders.filter(r => {
-        if (!r.autoDeleteDate) return true; // Mantieni se non ha data di eliminazione
-        const deleteDate = new Date(r.autoDeleteDate);
-        return deleteDate > today; // Mantieni solo se la data di eliminazione è futura
-    });
-    
-    if (filtered.length !== reminders.length) {
-        saveReminders(filtered);
-        console.log(`Eliminate automaticamente ${reminders.length - filtered.length} attività scadute`);
-    }
-}
-
-// Esegui l'eliminazione automatica all'avvio
-if (typeof autoDeleteExpiredReminders === 'function') {
-    autoDeleteExpiredReminders();
 }
