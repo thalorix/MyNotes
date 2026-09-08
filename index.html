@@ -21,31 +21,58 @@
     </nav>
     <main class="container py-4">
         <div id="alertContainer"></div>
-            <div class="col-6 col-md-3"><div class="card stat-card border-0 shadow-sm stat-today"><div class="card-body"><div class="text-muted small">Oggi</div><div class="h3 mb-0 fw-bold text-warning" id="statToday">0</div></div></div></div>
-            <div class="col-6 col-md-3"><div class="card stat-card border-0 shadow-sm stat-week"><div class="card-body"><div class="text-muted small">Prossimi 7gg</div><div class="h3 mb-0 fw-bold text-info" id="statWeek">0</div></div></div></div>
+        
+        <!-- Filtri -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Cerca</label>
+                        <div class="input-group">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Titolo o descrizione...">
+                            <button class="btn btn-primary" type="button"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Categoria</label>
+                        <select id="categoryFilter" class="form-select">
+                            <option value="tutte">Tutte</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Tag</label>
+                        <select id="tagFilter" class="form-select">
+                            <option value="tutti">Tutti</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Stato</label>
+                        <select id="statusFilter" class="form-select">
+                            <option value="tutti">Tutti</option>
+                            <option value="completati">Completati</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="clearFilters" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <!-- Tag rapidi -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-tags me-2"></i>Tag rapidi</span>
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#tagsModal"><i class="bi bi-gear-fill"></i> Gestisci</button>
             </div>
-            <div class="card-body"><div id="quickTags" class="d-flex flex-wrap gap-2"><span class="text-muted small">Nessun tag creato.</span></div></div>
+            <div class="card-body"><div id="quickTags" class="d-flex flex-wrap gap-2"><span class="text-muted small">Nessun tag.</span></div></div>
         </div>
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3"><label class="form-label small text-muted">Cerca</label><input type="text" id="searchInput" class="form-control" placeholder="Titolo o descrizione..."></div>
-                    <div class="col-md-2"><label class="form-label small text-muted">Categoria</label><select id="categoryFilter" class="form-select"><option value="tutte">Tutte</option></select></div>
-                    <div class="col-md-2"><label class="form-label small text-muted">Tag</label><select id="tagFilter" class="form-select"><option value="tutti">Tutti</option></select></div>
-                    <div class="col-md-2"><label class="form-label small text-muted">Stato</label><select id="statusFilter" class="form-select"><option value="tutti">Tutti</option><option value="completati">Completati</option></select></div>
-                    <div class="col-md-3"><button id="clearFilters" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i> Reset</button></div>
-                </div>
-            </div>
-        </div>
+        
         <div id="remindersList" class="row g-3"></div>
     </main>
     <footer class="text-center text-muted py-3 mt-5 border-top"><small>ReminderHub by Matteo</small></footer>
 
+    <!-- Modal promemoria -->
     <div class="modal fade" id="reminderModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -69,6 +96,7 @@
                             <div class="col-md-6"><label class="form-label fw-semibold">Priorità</label><select id="priorityInput" class="form-select"><option value="bassa">Bassa</option><option value="media" selected>Media</option><option value="alta">Alta</option></select></div>
                         </div>
                         <div class="mb-3 mt-3"><label class="form-label fw-semibold">Data scadenza</label><input type="date" id="dateInput" class="form-control"></div>
+                        <div class="mb-3"><label class="form-label fw-semibold">Elimina automaticamente dopo il <span class="text-muted small">(opzionale)</span></label><input type="date" id="autoDeleteInput" class="form-control"><div class="form-text">L'attività verrà eliminata automaticamente dopo questa data</div></div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tag</label>
                             <div id="tagsSelector" class="d-flex flex-wrap gap-2 p-2 border rounded"><span class="text-muted small">Nessun tag disponibile.</span></div>
@@ -84,6 +112,7 @@
         </div>
     </div>
 
+    <!-- Modal categorie -->
     <div class="modal fade" id="categoryModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -102,6 +131,7 @@
         </div>
     </div>
 
+    <!-- Modal tag -->
     <div class="modal fade" id="tagsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -112,20 +142,6 @@
                 <div class="modal-body">
                     <div class="input-group mb-3">
                         <input type="text" id="newTagInput" class="form-control" placeholder="Nuovo tag">
-                    <div class="mb-3">
-                        <label class="form-label small">Colore/Tipo tag</label>
-                        <div class="d-flex gap-2 flex-wrap" id="tagColorSelector">
-                            <span class="badge bg-primary p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('primary')" data-color="primary"><i class="bi bi-check-circle"></i> Primario</span>
-                            <span class="badge bg-success p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('success')" data-color="success"><i class="bi bi-check-circle"></i> Successo</span>
-                            <span class="badge bg-info p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('info')" data-color="info"><i class="bi bi-check-circle"></i> Info</span>
-                            <span class="badge bg-warning p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('warning')" data-color="warning"><i class="bi bi-check-circle"></i> Avviso</span>
-                            <span class="badge bg-danger p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('danger')" data-color="danger"><i class="bi bi-check-circle"></i> Urgente</span>
-                            <span class="badge bg-purple p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('purple')" data-color="purple"><i class="bi bi-check-circle"></i> Viola</span>
-                            <span class="badge bg-pink p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('pink')" data-color="pink"><i class="bi bi-check-circle"></i> Rosa</span>
-                            <span class="badge bg-dark p-2" style="cursor:pointer;border:3px solid transparent" onclick="selectTagColor('dark')" data-color="dark"><i class="bi bi-check-circle"></i> Scuro</span>
-                        </div>
-                        <input type="hidden" id="selectedTagColor" value="primary">
-                    </div>
                         <button class="btn btn-primary" onclick="addTag()"><i class="bi bi-plus-lg"></i> Aggiungi</button>
                     </div>
                     <div id="tagsList" class="d-flex flex-wrap gap-2"></div>
