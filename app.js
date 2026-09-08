@@ -55,13 +55,14 @@ function renderReminders() {
     const category = document.getElementById('categoryFilter').value;
     const tag = document.getElementById('tagFilter').value;
     const status = document.getElementById('statusFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
 
     let filtered = reminders.filter(r => {
         const matchSearch = !search || (r.title && r.title.toLowerCase().includes(search)) || (r.description && r.description.toLowerCase().includes(search));
         const matchCategory = category === 'tutte' || r.category === category;
         const matchTag = tag === 'tutti' || (r.tags && r.tags.includes(tag));
         const matchStatus = status === 'tutti' || (status === 'attivi' && !r.checked) || (status === 'completati' && r.checked);
-        return matchSearch && matchCategory && matchTag && matchStatus;
+        return matchSearch && matchCategory && matchTag && matchStatus && matchPriority;
     });
 
     filtered.sort((a, b) => {
@@ -273,11 +274,13 @@ function setupEventListeners() {
     document.getElementById('categoryFilter').addEventListener('change', renderReminders);
     document.getElementById('tagFilter').addEventListener('change', renderReminders);
     document.getElementById('statusFilter').addEventListener('change', renderReminders);
+    document.getElementById('priorityFilter').addEventListener('change', renderReminders);
     document.getElementById('clearFilters').addEventListener('click', () => {
         document.getElementById('searchInput').value = '';
         document.getElementById('categoryFilter').value = 'tutte';
         document.getElementById('tagFilter').value = 'tutti';
         document.getElementById('statusFilter').value = 'tutti';
+        document.getElementById('priorityFilter').value = 'tutte';
         renderReminders();
     });
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
