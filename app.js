@@ -10,6 +10,36 @@ const DEFAULT_TAGS = [{name: 'Urgente', color: 'danger'}, {name: 'Università', 
 let currentView = 'list'; // 'list', 'calendar', 'trash'
 let calendar = null;
 
+
+// ========== PWA: Service Worker ==========
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('✅ Service Worker registrato:', reg.scope))
+            .catch(err => console.warn('⚠️ SW registration failed:', err));
+    });
+}
+
+// ========== PWA: Installazione ==========
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('📱 Installazione PWA disponibile');
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'block';
+});
+
+document.getElementById('installBtn')?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Installazione:', outcome);
+    deferredPrompt = null;
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 App avviata');
     initData();
@@ -688,6 +718,36 @@ function showImportModal(data) {
     `;
     new bootstrap.Modal(document.getElementById('importModal')).show();
 }
+
+
+// ========== PWA: Service Worker ==========
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('✅ Service Worker registrato:', reg.scope))
+            .catch(err => console.warn('⚠️ SW registration failed:', err));
+    });
+}
+
+// ========== PWA: Installazione ==========
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('📱 Installazione PWA disponibile');
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'block';
+});
+
+document.getElementById('installBtn')?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Installazione:', outcome);
+    deferredPrompt = null;
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     const mergeBtn = document.getElementById('mergeBtn');
