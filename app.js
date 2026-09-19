@@ -330,6 +330,14 @@ function setupEventListeners() {
         renderReminders();
     });
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('importFile').addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            importData(e.target.files[0]);
+            e.target.value = ''; // Reset per poter importare lo stesso file di nuovo
+        }
+    });
     document.getElementById('reminderModal').addEventListener('hidden.bs.modal', () => {
         const form = document.getElementById('reminderForm');
         form.reset();
@@ -366,6 +374,62 @@ function handleFormSubmit(e) {
     saveReminders(reminders);
     renderReminders();
     bootstrap.Modal.getInstance(document.getElementById('reminderModal')).hide();
+}
+
+
+// ========== EXPORT / IMPORT ==========
+function exportData() {
+    const data = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        reminders: getReminders(),
+        categories: getCategories(),
+        tags: getTags()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-mynotes-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showAlert(`Backup esportato con successo! (${data.reminders.length} promemoria)`, 'success');
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Validazione base
+            if (!data.reminders || !data.categories || !data.tags) {
+                throw new Error('File non valido: mancano i dati richiesti');
+            }
+            
+            // Conferma
+            if (!confirm(`Importare questo backup?\n\n- ${data.reminders.length} promemoria\n- ${data.categories.length} categorie\n- ${data.tags.length} tag\n\n️ ATTENZIONE: i dati attuali verranno SOSTITUITI!`)) {
+                return;
+            }
+            
+            // Salva i nuovi dati
+            saveReminders(data.reminders);
+            saveCategories(data.categories);
+            saveTags(data.tags);
+            
+            // Aggiorna tutto
+            populateAllFilters();
+            renderAll();
+            showAlert('Backup importato con successo!', 'success');
+        } catch (err) {
+            console.error('Errore import:', err);
+            showAlert('Errore nel file: ' + err.message, 'danger');
+        }
+    };
+    reader.onerror = () => showAlert('Errore nella lettura del file', 'danger');
+    reader.readAsText(file);
 }
 
 function initTheme() {
