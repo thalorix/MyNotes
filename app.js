@@ -627,10 +627,16 @@ function initTheme() {
 
 function toggleTheme() {
     const current = document.documentElement.getAttribute('data-bs-theme');
-    const next = current === 'light' ? 'dark' : 'light';
+    console.log(' Tema attuale:', current);
+    const next = current === 'dark' ? 'light' : 'dark';
+    console.log('🌓 Nuovo tema:', next);
     document.documentElement.setAttribute('data-bs-theme', next);
     localStorage.setItem(THEME_KEY, next);
-    document.getElementById('themeToggle').innerHTML = next === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.innerHTML = next === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+    }
+    console.log('✅ Tema cambiato a:', next);
 }
 
 function autoDeleteExpiredReminders() {
