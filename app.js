@@ -2,6 +2,7 @@ const STORAGE_KEY = 'reminderhub_data';
 const CATEGORIES_KEY = 'reminderhub_categories';
 const TAGS_KEY = 'reminderhub_tags';
 const THEME_KEY = 'reminderhub_theme';
+const LAST_EXPORT_KEY = 'reminderhub_last_export';
 const DEFAULT_CATEGORIES = ['Università', 'Biblioteca', 'Lezioni', 'Personale', 'Lavoro', 'Altro'];
 const DEFAULT_TAGS = [{name: 'Urgente', color: 'danger'}, {name: 'Università', color: 'primary'}];
 
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
     setupEventListeners();
     autoDeleteExpiredReminders();
+    checkWeeklyBackup();
 });
 
 function initData() {
@@ -377,7 +379,9 @@ function handleFormSubmit(e) {
 }
 
 
-// ========== EXPORT / IMPORT ==========
+// ========== EXPORT / IMPORT AVANZATO ==========
+let pendingImportData = null;
+
 function exportData() {
     const data = {
         version: '1.0',
@@ -395,6 +399,10 @@ function exportData() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    // Salva timestamp ultimo export
+    localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
+    
     showAlert(`Backup esportato con successo! (${data.reminders.length} promemoria)`, 'success');
 }
 
@@ -404,25 +412,14 @@ function importData(file) {
         try {
             const data = JSON.parse(e.target.result);
             
-            // Validazione base
+            // Validazione
             if (!data.reminders || !data.categories || !data.tags) {
                 throw new Error('File non valido: mancano i dati richiesti');
             }
             
-            // Conferma
-            if (!confirm(`Importare questo backup?\n\n- ${data.reminders.length} promemoria\n- ${data.categories.length} categorie\n- ${data.tags.length} tag\n\n️ ATTENZIONE: i dati attuali verranno SOSTITUITI!`)) {
-                return;
-            }
-            
-            // Salva i nuovi dati
-            saveReminders(data.reminders);
-            saveCategories(data.categories);
-            saveTags(data.tags);
-            
-            // Aggiorna tutto
-            populateAllFilters();
-            renderAll();
-            showAlert('Backup importato con successo!', 'success');
+            // Salva i dati in attesa e mostra modal di scelta
+            pendingImportData = data;
+            showImportModal(data);
         } catch (err) {
             console.error('Errore import:', err);
             showAlert('Errore nel file: ' + err.message, 'danger');
@@ -430,6 +427,123 @@ function importData(file) {
     };
     reader.onerror = () => showAlert('Errore nella lettura del file', 'danger');
     reader.readAsText(file);
+}
+
+function showImportModal(data) {
+    const summary = document.getElementById('importSummary');
+    summary.innerHTML = `
+        <li class="list-group-item d-flex justify-content-between">
+            <span><i class="bi bi-bell me-2"></i>Promemoria</span>
+            <span class="badge bg-primary">${data.reminders.length}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+            <span><i class="bi bi-folder me-2"></i>Categorie</span>
+            <span class="badge bg-secondary">${data.categories.length}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+            <span><i class="bi bi-tags me-2"></i>Tag</span>
+            <span class="badge bg-info">${data.tags.length}</span>
+        </li>
+    `;
+    new bootstrap.Modal(document.getElementById('importModal')).show();
+}
+
+function mergeData(data) {
+    // Unione promemoria: per ID (aggiorna se esiste, altrimenti aggiungi)
+    const currentReminders = getReminders();
+    const mergedReminders = [...currentReminders];
+    let updated = 0, added = 0;
+    
+    data.reminders.forEach(newR => {
+        const idx = mergedReminders.findIndex(r => r.id === newR.id);
+        if (idx >= 0) {
+            mergedReminders[idx] = {...mergedReminders[idx], ...newR};
+            updated++;
+        } else {
+            mergedReminders.push(newR);
+            added++;
+        }
+    });
+    saveReminders(mergedReminders);
+    
+    // Unione categorie: uniche, no duplicati
+    const currentCategories = getCategories();
+    const mergedCategories = [...new Set([...currentCategories, ...data.categories])];
+    saveCategories(mergedCategories);
+    
+    // Unione tag: per nome (aggiorna colore se esiste)
+    const currentTags = getTags();
+    const mergedTags = [...currentTags];
+    data.tags.forEach(newT => {
+        const idx = mergedTags.findIndex(t => t.name === newT.name);
+        if (idx >= 0) {
+            mergedTags[idx] = {...mergedTags[idx], ...newT};
+        } else {
+            mergedTags.push(newT);
+        }
+    });
+    saveTags(mergedTags);
+    
+    return {updated, added, categories: mergedCategories.length - currentCategories.length, tags: mergedTags.length - currentTags.length};
+}
+
+function replaceData(data) {
+    saveReminders(data.reminders);
+    saveCategories(data.categories);
+    saveTags(data.tags);
+}
+
+// Event listeners per i pulsanti del modal import
+document.addEventListener('DOMContentLoaded', () => {
+    const mergeBtn = document.getElementById('mergeBtn');
+    const replaceBtn = document.getElementById('replaceBtn');
+    
+    if (mergeBtn) {
+        mergeBtn.addEventListener('click', () => {
+            if (!pendingImportData) return;
+            const stats = mergeData(pendingImportData);
+            bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+            populateAllFilters();
+            renderAll();
+            showAlert(`Dati uniti! +${stats.added} nuovi, ${stats.updated} aggiornati, +${stats.categories} categorie, +${stats.tags} tag`, 'success');
+            pendingImportData = null;
+        });
+    }
+    
+    if (replaceBtn) {
+        replaceBtn.addEventListener('click', () => {
+            if (!pendingImportData) return;
+            if (!confirm('⚠️ Sostituire TUTTI i dati attuali? Questa azione non è reversibile!')) return;
+            replaceData(pendingImportData);
+            bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+            populateAllFilters();
+            renderAll();
+            showAlert('Dati sostituiti con successo!', 'success');
+            pendingImportData = null;
+        });
+    }
+});
+
+// Controllo backup settimanale
+function checkWeeklyBackup() {
+    const lastExport = localStorage.getItem(LAST_EXPORT_KEY);
+    if (!lastExport) {
+        // Mai esportato
+        setTimeout(() => {
+            showAlert('⚠️ Non hai mai fatto un backup! Clicca "Esporta" per salvare i tuoi dati.', 'warning');
+        }, 1000);
+        return;
+    }
+    
+    const lastDate = new Date(lastExport);
+    const now = new Date();
+    const daysSince = (now - lastDate) / (1000 * 60 * 60 * 24);
+    
+    if (daysSince >= 7) {
+        setTimeout(() => {
+            showAlert(` Sono passati ${Math.floor(daysSince)} giorni dall'ultimo backup. Clicca "Esporta" per aggiornarlo!`, 'warning');
+        }, 1000);
+    }
 }
 
 function initTheme() {
