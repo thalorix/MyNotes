@@ -40,6 +40,12 @@ document.getElementById('installBtn')?.addEventListener('click', async () => {
     if (banner) banner.style.display = 'none';
 });
 
+// Applica il tema immediatamente per evitare flash di tema chiaro
+(function() {
+    const saved = localStorage.getItem('reminderhub_theme') || 'dark';
+    document.documentElement.setAttribute('data-bs-theme', saved);
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 App avviata');
     initData();
@@ -610,9 +616,13 @@ function handleFormSubmit(e) {
 }
 
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY) || 'light';
+    const saved = localStorage.getItem(THEME_KEY) || 'dark';
+    console.log('🎨 Tema caricato:', saved);
     document.documentElement.setAttribute('data-bs-theme', saved);
-    document.getElementById('themeToggle').innerHTML = saved === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.innerHTML = saved === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+    }
 }
 
 function toggleTheme() {
