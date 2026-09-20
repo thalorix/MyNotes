@@ -616,26 +616,36 @@ function handleFormSubmit(e) {
 }
 
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY) || 'dark';
-    console.log('🎨 Tema caricato:', saved);
+    const saved = localStorage.getItem(THEME_KEY) || 'light';
     document.documentElement.setAttribute('data-bs-theme', saved);
     const toggle = document.getElementById('themeToggle');
     if (toggle) {
-        toggle.innerHTML = saved === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+        toggle.innerHTML = saved === 'light' 
+            ? '<i class="bi bi-moon-stars-fill"></i>' 
+            : '<i class="bi bi-sun-fill"></i>';
     }
+}
 }
 
 function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-bs-theme');
-    console.log(' Tema attuale:', current);
+    const html = document.documentElement;
+    const current = html.getAttribute('data-bs-theme');
     const next = current === 'dark' ? 'light' : 'dark';
-    console.log('🌓 Nuovo tema:', next);
-    document.documentElement.setAttribute('data-bs-theme', next);
+    
+    // Cambia il tema
+    html.setAttribute('data-bs-theme', next);
     localStorage.setItem(THEME_KEY, next);
+    
+    // Aggiorna icona
     const toggle = document.getElementById('themeToggle');
     if (toggle) {
-        toggle.innerHTML = next === 'light' ? '<i class="bi bi-moon-stars-fill"></i>' : '<i class="bi bi-sun-fill"></i>';
+        toggle.innerHTML = next === 'light' 
+            ? '<i class="bi bi-moon-stars-fill"></i>' 
+            : '<i class="bi bi-sun-fill"></i>';
     }
+    
+    console.log('Tema cambiato in:', next);
+}
     console.log('✅ Tema cambiato a:', next);
 }
 
@@ -829,3 +839,102 @@ function checkWeeklyBackup() {
         setTimeout(() => showAlert(`⏰ Sono passati ${Math.floor(daysSince)} giorni dall'ultimo backup. Clicca "Esporta" per aggiornarlo!`, 'warning'), 1000);
     }
 }
+
+
+// ========== Funzioni globali per i modali ==========
+// Queste funzioni devono essere globali per essere chiamate dall'HTML
+window.addCategory = function() {
+    console.log(' Aggiungendo categoria...');
+    const input = document.getElementById('newCategoryInput');
+    if (!input) {
+        console.error('❌ Input newCategoryInput non trovato');
+        return;
+    }
+    const name = input.value.trim();
+    if (!name) {
+        alert('Inserisci un nome per la categoria');
+        return;
+    }
+    const categories = getCategories();
+    if (categories.includes(name)) {
+        alert('Questa categoria esiste già');
+        return;
+    }
+    categories.push(name);
+    saveCategories(categories);
+    input.value = '';
+    renderCategories();
+    renderCategoriesDisplay();
+    populateAllFilters();
+    console.log('✅ Categoria aggiunta:', name);
+    alert('Categoria "' + name + '" aggiunta con successo!');
+};
+
+window.addTag = function() {
+    console.log('🏷️ Aggiungendo tag...');
+    const input = document.getElementById('newTagInput');
+    if (!input) {
+        console.error('❌ Input newTagInput non trovato');
+        return;
+    }
+    const name = input.value.trim();
+    if (!name) {
+        alert('Inserisci un nome per il tag');
+        return;
+    }
+    const tags = getTags();
+    if (tags.find(t => t.name === name)) {
+        alert('Questo tag esiste già');
+        return;
+    }
+    const colors = ['primary','success','info','warning','danger','purple','pink'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    tags.push({name: name, color: randomColor});
+    saveTags(tags);
+    input.value = '';
+    renderTags();
+    renderQuickTags();
+    populateAllFilters();
+    console.log('✅ Tag aggiunto:', name, 'colore:', randomColor);
+    alert('Tag "' + name + '" aggiunto con successo!');
+};
+
+window.deleteCategory = function(name) {
+    if (name === 'Altro') {
+        alert('Non puoi eliminare la categoria default "Altro"');
+        return;
+    }
+    if (!confirm('Eliminare la categoria "' + name + '"? Le attività in questa categoria passeranno a "Altro".')) {
+        return;
+    }
+    const categories = getCategories().filter(c => c !== name);
+    saveCategories(categories);
+    const reminders = getReminders();
+    reminders.forEach(r => {
+        if (r.category === name) r.category = 'Altro';
+    });
+    saveReminders(reminders);
+    renderCategories();
+    renderCategoriesDisplay();
+    populateAllFilters();
+    renderReminders();
+    console.log('✅ Categoria eliminata:', name);
+};
+
+window.deleteTag = function(name) {
+    if (!confirm('Eliminare il tag "' + name + '"? Verrà rimosso da tutte le attività.')) {
+        return;
+    }
+    const tags = getTags().filter(t => t.name !== name);
+    saveTags(tags);
+    const reminders = getReminders();
+    reminders.forEach(r => {
+        if (r.tags) r.tags = r.tags.filter(t => t !== name);
+    });
+    saveReminders(reminders);
+    renderTags();
+    renderQuickTags();
+    populateAllFilters();
+    renderReminders();
+    console.log('✅ Tag eliminato:', name);
+};
