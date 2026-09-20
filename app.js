@@ -62,7 +62,9 @@ function initTheme() {
 
 function toggleTheme() {
     const current = document.documentElement.getAttribute('data-bs-theme');
+    console.log('🎨 Tema attuale:', current);
     const next = current === 'dark' ? 'light' : 'dark';
+    console.log('🌓 Cambio a:', next);
     document.documentElement.setAttribute('data-bs-theme', next);
     localStorage.setItem(THEME_KEY, next);
     const toggle = document.getElementById('themeToggle');
