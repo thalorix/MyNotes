@@ -13,7 +13,7 @@ let pendingImportData = null;
 
 // ========== IIFE: Applica tema subito ==========
 (function() {
-    const saved = localStorage.getItem(THEME_KEY) || 'light';
+    const saved = localStorage.getItem(THEME_KEY) || 'dark';
     document.documentElement.setAttribute('data-bs-theme', saved);
 })();
 
@@ -52,7 +52,7 @@ function generateId() { return Date.now().toString(36) + Math.random().toString(
 
 // ========== Tema ==========
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY) || 'light';
+    const saved = localStorage.getItem(THEME_KEY) || 'dark';
     document.documentElement.setAttribute('data-bs-theme', saved);
     const toggle = document.getElementById('themeToggle');
     if (toggle) {
@@ -396,6 +396,7 @@ function renderCalendar() {
 
 // ========== Categorie e Tag (FUNZIONI GLOBALI) ==========
 window.addCategory = function() {
+    console.log('➕ addCategory chiamata');
     console.log('➕ Aggiungendo categoria...');
     const input = document.getElementById('newCategoryInput');
     if (!input) { console.error(' Input non trovato'); return; }
@@ -426,6 +427,7 @@ window.deleteCategory = function(name) {
 };
 
 window.addTag = function() {
+    console.log('️ addTag chiamata');
     console.log('🏷️ Aggiungendo tag...');
     const input = document.getElementById('newTagInput');
     if (!input) { console.error('❌ Input non trovato'); return; }
